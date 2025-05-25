@@ -19,7 +19,9 @@ from lark_oapi.ws.const import *
 from lark_oapi.ws.enum import FrameType, MessageType
 from lark_oapi.ws.exception import *
 from lark_oapi.ws.model import *
-from lark_oapi.ws.pb.google.protobuf.internal.containers import RepeatedCompositeFieldContainer
+from lark_oapi.ws.pb.google.protobuf.internal.containers import (
+    RepeatedCompositeFieldContainer,
+)
 from lark_oapi.ws.pb.pbbp2_pb2 import Frame
 
 try:
@@ -51,11 +53,11 @@ def _new_ping_frame(service_id: int) -> Frame:
 
 
 def _ordinal(n: int):
-    suffixes = {1: 'st', 2: 'nd', 3: 'rd'}
+    suffixes = {1: "st", 2: "nd", 3: "rd"}
     if 10 <= n <= 20:
-        suffix = 'th'
+        suffix = "th"
     else:
-        suffix = suffixes.get(n % 10, 'th')
+        suffix = suffixes.get(n % 10, "th")
     return str(n) + suffix
 
 
@@ -84,13 +86,15 @@ def _parse_ws_conn_exception(e: websockets.InvalidStatusCode):
 
 
 class Client(object):
-    def __init__(self,
-                 app_id: str,
-                 app_secret,
-                 log_level: LogLevel = LogLevel.INFO,
-                 event_handler: EventDispatcherHandler = None,
-                 domain: str = FEISHU_DOMAIN,
-                 auto_reconnect: bool = True) -> None:
+    def __init__(
+        self,
+        app_id: str,
+        app_secret,
+        log_level: LogLevel = LogLevel.INFO,
+        event_handler: EventDispatcherHandler = None,
+        domain: str = FEISHU_DOMAIN,
+        auto_reconnect: bool = True,
+    ) -> None:
         self._app_id: str = app_id
         self._app_secret: str = app_secret
         self._log_level: LogLevel = log_level
@@ -253,14 +257,21 @@ class Client(object):
                 return
 
         message_type = MessageType(type_)
-        logger.debug(self._fmt_log("receive message, message_type: {}, message_id: {}, trace_id: {}, payload: {}",
-                                   message_type.value, msg_id, trace_id, pl.decode(UTF_8)))
+        logger.debug(
+            self._fmt_log(
+                "receive message, message_type: {}, message_id: {}, trace_id: {}, payload: {}",
+                message_type.value,
+                msg_id,
+                trace_id,
+                pl.decode(UTF_8),
+            )
+        )
 
         resp = Response(code=http.HTTPStatus.OK)
         try:
             start = int(round(time.time() * 1000))
             if message_type == MessageType.EVENT:
-                result = self._event_handler.do_without_validation(pl)
+                result = await self._event_handler.do_without_validation(pl)
             elif message_type == MessageType.CARD:
                 return
             else:
@@ -273,8 +284,14 @@ class Client(object):
                 resp.data = base64.b64encode(JSON.marshal(result).encode(UTF_8))
         except Exception as e:
             logger.error(
-                self._fmt_log("handle message failed, message_type: {}, message_id: {}, trace_id: {}, err: {}",
-                              message_type.value, msg_id, trace_id, e))
+                self._fmt_log(
+                    "handle message failed, message_type: {}, message_id: {}, trace_id: {}, err: {}",
+                    message_type.value,
+                    msg_id,
+                    trace_id,
+                    e,
+                )
+            )
             resp = Response(code=http.HTTPStatus.INTERNAL_SERVER_ERROR)
 
         frame.payload = JSON.marshal(resp).encode(UTF_8)
@@ -293,7 +310,8 @@ class Client(object):
                     return
                 await asyncio.sleep(self._reconnect_interval)
             raise ServerUnreachableException(
-                f"unable to connect to the server after trying {self._reconnect_count} times")
+                f"unable to connect to the server after trying {self._reconnect_count} times"
+            )
         else:
             i = 0
             while True:
@@ -303,7 +321,9 @@ class Client(object):
                 i += 1
 
     async def _try_connect(self, cnt: int) -> bool:
-        logger.info(self._fmt_log("trying to reconnect for the {} time", _ordinal(cnt + 1)))
+        logger.info(
+            self._fmt_log("trying to reconnect for the {} time", _ordinal(cnt + 1))
+        )
         try:
             await self._connect()
             return True
@@ -331,19 +351,21 @@ class Client(object):
     async def _write_message(self, data: bytes):
         async with self._lock:
             if self._conn is None:
-                raise ConnectionClosedException("connection is closed, write message failed")
+                raise ConnectionClosedException(
+                    "connection is closed, write message failed"
+                )
             await self._conn.send(data)
 
     def _combine(self, msg_id: str, sum_: int, seq: int, bs: bytes) -> Optional[bytes]:
         val = self._cache.get(msg_id)
         if val is None:
-            buf = [b''] * sum_
+            buf = [b""] * sum_
             buf[seq] = bs
             self._cache.set(msg_id, buf, 5)
             return None
 
         val[seq] = bs
-        pl = b''
+        pl = b""
         for v in val:
             if not v:
                 self._cache.set(msg_id, val, 5)
@@ -361,6 +383,6 @@ class Client(object):
     def _fmt_log(self, fmt: str, *args) -> str:
         log = fmt.format(*args)
         if self._conn_id != "":
-            log += f' [conn_id={self._conn_id}]'
+            log += f" [conn_id={self._conn_id}]"
 
         return log

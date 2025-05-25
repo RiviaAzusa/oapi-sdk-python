@@ -121,7 +121,7 @@ class EventDispatcherHandler(HttpHandler):
 
             return resp
 
-    def do_without_validation(self, payload: bytes) -> Any:
+    async def do_without_validation(self, payload: bytes) -> Any:
         pl = payload.decode(UTF_8)
         context = JSON.unmarshal(pl, EventContext)
         if Strings.is_not_empty(context.schema):
@@ -153,7 +153,7 @@ class EventDispatcherHandler(HttpHandler):
 
             # 消息反序列化
             data = JSON.unmarshal(pl, processor.type())
-            processor.do(data)
+            await processor.do(data)
 
     def _decrypt(self, content: bytes) -> str:
         plaintext: str

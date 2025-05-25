@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lark-oapi"
+version = "1.4.16"
+description = "Lark OpenAPI SDK for Python"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [
+    {name = "Wenbo Mao", email = "maowenbo@bytedance.com"}
+]
+keywords = ["Lark", "OpenAPI"]
+dependencies = [
+    "requests>=2.32.3",
+    "requests-toolbelt>=1.0.0",
+    "pycryptodome>=3.23.0",
+    "websockets>=15.0.1",
+    "httpx>=0.28.1",
+]
+
+[project.optional-dependencies]
+flask = ["Flask>=2"]
+
+[project.urls]
+Homepage = "https://github.com/larksuite/oapi-sdk-python"
+Source = "https://github.com/larksuite/oapi-sdk-python"
+
+[tool.setuptools.packages.find]
+include = ["lark_oapi*"]
