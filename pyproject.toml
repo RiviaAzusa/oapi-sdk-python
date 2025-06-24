@@ -24,8 +24,7 @@ dependencies = [
 flask = ["Flask>=2"]
 
 [project.urls]
-Homepage = "https://github.com/larksuite/oapi-sdk-python"
-Source = "https://github.com/larksuite/oapi-sdk-python"
-
+Homepage = "https://github.com/RiviaAzusa/oapi-sdk-python"
+Source = "https://github.com/RiviaAzusa/oapi-sdk-python"
 [tool.setuptools.packages.find]
 include = ["lark_oapi*"]
